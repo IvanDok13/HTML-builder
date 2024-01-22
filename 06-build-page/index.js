@@ -1,8 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
+const assetsDist = path.join(__dirname, 'assets');
 const styleDir = path.join(__dirname, 'styles');
 const projectDist = path.join(__dirname, 'project-dist');
+const projectDistAsset = path.join(projectDist, 'assets');
 
 fs.mkdir(projectDist, { recursive: true }, (err) => {
   if (err) throw err;
@@ -30,3 +32,28 @@ fs.readdir(styleDir, { withFileTypes: true }, (err, files) => {
     }
   }
 });
+
+const copyDir = (orig = assetsDist, target = projectDistAsset) => {
+  fs.mkdir(target, { recursive: true }, (err) => {
+    if (err) throw err;
+  });
+
+  fs.readdir(orig, { withFileTypes: true }, (err, folder) => {
+    if (err) throw err;
+    folder.forEach((elem) => {
+      const filePath = path.join(orig, elem.name);
+      const newFilePath = path.join(target, elem.name);
+      if (elem.isFile()) {
+        fs.copyFile(filePath, newFilePath, (err) => {
+          if (err) throw err;
+        });
+      } else if (elem.isDirectory()) {
+        fs.mkdir(newFilePath, { recursive: true }, (err) => {
+          if (err) throw err;
+        });
+        copyDir(filePath, newFilePath);
+      }
+    });
+  });
+};
+copyDir();
