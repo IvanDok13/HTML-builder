@@ -5,6 +5,7 @@ const assetsDist = path.join(__dirname, 'assets');
 const styleDir = path.join(__dirname, 'styles');
 const projectDist = path.join(__dirname, 'project-dist');
 const projectDistAsset = path.join(projectDist, 'assets');
+const compDir = path.join(__dirname, 'components');
 
 fs.mkdir(projectDist, { recursive: true }, (err) => {
   if (err) throw err;
@@ -57,3 +58,25 @@ const copyDir = (orig = assetsDist, target = projectDistAsset) => {
   });
 };
 copyDir();
+
+let page = '';
+
+fs.readFile(path.join(__dirname, 'template.html'), 'utf-8', (err, part) => {
+  if (err) throw err;
+  page += part;
+
+  fs.readdir(compDir, { withFileTypes: true }, (err, elem) => {
+    if (err) throw err;
+    for (let i = 0; i < elem.length; i += 1) {
+      fs.readFile(path.join(compDir, elem[i].name), 'utf-8', (err, part) => {
+        if (err) throw err;
+        let tempTag = `{{${path.basename(elem[i].name, '.html')}}}`;
+        page = page.replace(tempTag, part);
+
+        fs.writeFile(path.join(projectDist, 'index.html'), page, (err) => {
+          if (err) throw err;
+        });
+      });
+    }
+  });
+});
